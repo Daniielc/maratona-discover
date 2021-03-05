@@ -114,8 +114,8 @@ const Utils = {
         return (signal + value)
     },
     formatAmount(value) {
-        value = Number(value.replace(/\,\./g, "")) * 100
-        return parseInt(value);;
+        value = Number(value) * 100
+        return Math.round(value);
     },
     formatDate(value) {
         const splittedDate = value.split("-");
