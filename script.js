@@ -5,65 +5,39 @@ const Modal = {
         //Adicionar a class active do modal-overlay
         document
             .querySelector('.modal-overlay')
-            .classList.add('active')
+            .classList.toggle('active')
     },
     close() {
         // Fechar modal
         //Romver a class active do modal-overlay
         document
             .querySelector('.modal-overlay')
-            .classList.remove('active')
+            .classList.toggle('active')
     }
 }
 
-const transactions = [
-    {
-        id: 1,
-        description: 'Luz',
-        amount: -50000,
-        date: '04/03/2021'
-    },
-    {
-        id: 2,
-        description: 'Água',
-        amount: -15000,
-        date: '04/03/2021'
-    },
-    {
-        id: 3,
-        description: 'Água',
-        amount: 500000,
-        date: '04/03/2021'
-    },
-    {
-        id: 4,
-        description: 'Internet',
-        amount: -20000,
-        date: '04/03/2021'
-    }
-]
-
 const DOM = {
     transactionMapper() {
-        transactions.map(trans => {
+        Transaction.all.map(trans => {
             DOM.addTransaction(trans);
         })
     },
     transactionContainer: document.querySelector("#data-table tbody"),
-    addTransaction(transaction) {
+    addTransaction(transaction, index) {
         const tr = document.createElement("tr");
-        tr.innerHTML = this.innerHTMLTransaction(transaction);
+        tr.innerHTML = this.innerHTMLTransaction(transaction, index);
+        tr.dataset.index = index;
 
         DOM.transactionContainer.appendChild(tr);
     },
-    innerHTMLTransaction(transaction) {
+    innerHTMLTransaction(transaction, index) {
         const CSSclass = transaction.amount > 0 ? "income" : "expense";
         const amount = Utils.formatCurrency(transaction.amount)
         return `
             <td class="description">${transaction.description}</td>
             <td class="${CSSclass}">${amount}</td>
             <td class="date">${transaction.date}</td>
-            <td><img src="./assets/minus.svg" alt="Remover Transação"></td>
+            <td><img onclick="Transaction.del(${index})" src="./assets/minus.svg" alt="Remover Transação"></td>
         `
     },
     updateBalance() {
@@ -73,14 +47,37 @@ const DOM = {
             .innerHTML = Utils.formatCurrency(Transaction.expenses());
         document.getElementById("totalDisplay")
             .innerHTML = Utils.formatCurrency(Transaction.total());
+    },
+    clearTransaction() {
+        DOM.transactionContainer.innerHTML = "";
+    }
+}
+
+const Storage = {
+    get() {
+        return JSON.parse(localStorage.getItem("dev.finances:transactions")) || []
+    },
+    set(transaction) {
+        localStorage.setItem("dev.finances:transactions", JSON.stringify(transaction))
     }
 }
 
 const Transaction = {
+    all: Storage.get(),
+    add(transaction) {
+        Transaction.all.push(transaction);
+
+        App.reload();
+    },
+    del(index) {
+        Transaction.all.splice(index, 1);
+
+        App.reload();
+    },
     incomes() {
         // somar as entradas
         let income = 0;
-        transactions.map(trans => {
+        Transaction.all.map(trans => {
             if (trans.amount > 0)
                 income += trans.amount;
         });
@@ -91,7 +88,7 @@ const Transaction = {
         // somar as saídas
         let expense = 0;
 
-        transactions.map(trans => {
+        Transaction.all.map(trans => {
             if (trans.amount < 0)
                 expense += trans.amount;
         });
@@ -115,8 +112,95 @@ const Utils = {
         })
 
         return (signal + value)
+    },
+    formatAmount(value) {
+        value = Number(value.replace(/\,\./g, "")) * 100
+        return parseInt(value);;
+    },
+    formatDate(value) {
+        const splittedDate = value.split("-");
+        return `${splittedDate[2]} / ${splittedDate[1]} / ${splittedDate[0]}`
+    },
+    formatDescriptin(value) {
+        console.log(value);
     }
 }
 
-DOM.transactionMapper();
-DOM.updateBalance();
+const Form = {
+    description: document.querySelector("input#description"),
+    amount: document.querySelector("input#amount"),
+    date: document.querySelector("input#date"),
+
+    getValues() {
+        return {
+            description: Form.description.value,
+            amount: Form.amount.value,
+            date: Form.date.value
+        }
+    },
+    validateField() {
+        let { description, amount, date } = Form.getValues();
+
+        if (description.trim() === "" ||
+            amount.trim() === "" ||
+            date.trim() === "") {
+            throw new Error("Por favor preencha todos os campos.")
+        }
+    },
+    formatData() {
+        let { description, amount, date } = Form.getValues();
+
+        amount = Utils.formatAmount(amount);
+        date = Utils.formatDate(date);
+
+        return {
+            description,
+            amount,
+            date
+        }
+
+    },
+    clearFields(transaction) {
+        Form.description.value = "";
+        Form.amount.value = "";
+        Form.date.value = "";
+    },
+    submit(event) {
+        event.preventDefault();
+
+        try {
+            // validando os campos
+            Form.validateField();
+
+            // formatando os dados
+            const transactions = Form.formatData();
+
+            // salvando os dados
+            Transaction.add(transactions);
+
+            // Limpando os campos
+            Form.clearFields();
+
+            // Fechando Modal
+            Modal.close();
+
+        } catch (error) {
+            alert(error.message)
+        }
+    }
+}
+
+const App = {
+    init() {
+        DOM.transactionMapper();
+        DOM.updateBalance();
+
+        Storage.set(Transaction.all)
+    },
+    reload() {
+        DOM.clearTransaction();
+        App.init();
+    }
+}
+
+App.init();
