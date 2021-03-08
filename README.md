@@ -2,13 +2,13 @@
 
 Este site é uma forma de você cadastrar suas entradas(incomes) e saídas(expenses), onde você informa a descrição, valor e data da Entrada/Saída. E automaticamente é feito os cálculos e nos informa o Total.
 
-### Este site foi desenvolvido durante a Maratona Discover 2021, com uma leve modificação para uma versão Rocketseat!! HAHA, com o instrutor Mayk Brito, seguindo as aulas 01 - 04 disponível no canal [Mayk Brito](https://youtu.be/NlDr6JX3VvA/) ###
+#### Este site foi desenvolvido durante a Maratona Discover 2021, com uma leve modificação para uma versão Rocketseat!! HAHA, com o instrutor Mayk Brito, seguindo as aulas 01 - 04 disponível no canal [Mayk Brito](https://youtu.be/NlDr6JX3VvA/) ####
 
-**Tecnologias utilizadas**
-    - HTML
-    - CSS
-    - JavaScript
-    - Local Storage
+* **Tecnologias utilizadas**
+    * HTML
+    * CSS
+    * JavaScript
+    * Local Storage
 
 **Extras**
 
